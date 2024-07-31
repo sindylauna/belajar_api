@@ -89,27 +89,61 @@ class PemainController extends Controller
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+    
     public function edit(string $id)
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+    
     public function update(Request $request, string $id)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'nama_pemain' => 'required',
+            'foto' => 'required|image|mimes:png,jpg',
+            'tgl_lahir' => 'required',
+            'harga_pasar' => 'required|numeric',
+            'posisi' => 'required|in:gk,df,mf,fw',
+            'id_klub' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'data tidak valid',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            // upload image
+            $path = $request->file('foto')->store('public/foto');
+            $pemain = Pemain::findOrFail($id);
+            $pemain->nama_pemain = $request->nama_pemain;
+            $pemain->foto = $path;
+            $pemain->tgl_lahir = $request->tgl_lahir;
+            $pemain->harga_pasar = $request->harga_pasar;
+            $pemain->posisi = $request->posisi;
+            $pemain->negara = $request->negara;
+            $pemain->id_klub = $request->id_klub;
+            $pemain->save();
+            return response()->json([
+                'success' => true,
+                'message' => 'data berhasil dibuat',
+                'data' => $pemain,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'terjadi kesalahan',
+                'errors' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    
     public function destroy(string $id)
     {
-        //
+        
     }
 }
